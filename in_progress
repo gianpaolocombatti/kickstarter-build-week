@@ -14,7 +14,7 @@ import sqlite3
 import pandas as pd
 
 external_stylesheets = [
-    dbc.themes.UNITED,  # Bootswatch theme
+    dbc.themes.SLATE,  # Bootstrap theme
     'https://www.kaggle.com/sripaadarinivasan/kickstarter-campaigns-dataset',  # kickstarter data
 ]
 
@@ -89,10 +89,10 @@ column1 = dbc.Col(
     [
         dcc.Markdown(
             """
-            ## This app will aid potential Kickstarter campaigns in predicting whether or not their campaign will be funded
+            ## This app will aid potential Kickstarter campaigns in predicting whether or not their campaign will be funded.
             """
         ),
-        dcc.Link(dbc.Button('Predict my Kickstarter!!!', color='primary'), href='/create')
+        dcc.Link(dbc.Button('Predict my Kickstarter!!!', color='success'), href='/create')
     ],
     md=4,
 )
@@ -140,7 +140,7 @@ success = html.Div([dcc.Location(id='url_login_success', refresh=True),
                     html.Div([html.H2('Login successful.'),
                               html.Br(),
                               html.P('Go to Predictor'),
-                              dcc.Link(dbc.Button('Predict', color='primary'),
+                              dcc.Link(dbc.Button('Predict', color='danger'),
                                        href='/predictions')]),
                     html.Div([html.Br(),
                               html.Button(id='back-button',
@@ -199,7 +199,7 @@ def display_page(pathname):
     [State('username', 'value'),
      State('password', 'value'), State('email', 'value')])
 def insert_users(n_clicks, un, pw, em):
-    hashed_password = generate_password_hash(pw, method='sha256')
+    hashed_password = generate_password_hash(pw, method='pbkdf2:sha256')
     if un is not None and pw is not None and em is not None and n_clicks > 0:
         ins = Users_tbl.insert().values(username=un, password=hashed_password, email=em, )
         conn = engine.connect()
