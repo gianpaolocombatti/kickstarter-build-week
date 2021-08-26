@@ -52,7 +52,7 @@ Users_tbl = Table('users', Users.metadata)
 
 def create_users_table():
     Users.metadata.create_all(engine)
-    create_users_table()
+create_users_table()
 
 
 db.init_app(server)
@@ -199,7 +199,7 @@ def display_page(pathname):
     [State('username', 'value'),
      State('password', 'value'), State('email', 'value')])
 def insert_users(n_clicks, un, pw, em):
-    hashed_password = generate_password_hash(pw, method='pbkdf2:sha256')
+    hashed_password = generate_password_hash(pw, method='pbkdf2:sha256', salt_length=16)
     if un is not None and pw is not None and em is not None and n_clicks > 0:
         ins = Users_tbl.insert().values(username=un, password=hashed_password, email=em, )
         conn = engine.connect()
