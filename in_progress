@@ -1,20 +1,21 @@
+import base64
 import configparser
-import warnings
-import dash
 import os
+import sqlite3
+import warnings
+
+import dash
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
-from werkzeug.security import generate_password_hash, check_password_hash
-import dash_bootstrap_components as dbc
 from flask_login import login_user, logout_user, current_user, LoginManager, UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Table, create_engine
-import sqlite3
-import pandas as pd
+from werkzeug.security import generate_password_hash, check_password_hash
 
 external_stylesheets = [
-    dbc.themes.UNITED,  # Bootswatch theme
+    dbc.themes.SLATE,  # Bootstrap theme
     'https://www.kaggle.com/sripaadarinivasan/kickstarter-campaigns-dataset',  # kickstarter data
 ]
 
@@ -52,7 +53,9 @@ Users_tbl = Table('users', Users.metadata)
 
 def create_users_table():
     Users.metadata.create_all(engine)
-    create_users_table()
+
+
+create_users_table()
 
 
 db.init_app(server)
@@ -89,20 +92,21 @@ column1 = dbc.Col(
     [
         dcc.Markdown(
             """
-            ## This app will aid potential Kickstarter campaigns in predicting whether or not their campaign will be funded
+            ## This app will aid potential Kickstarter campaigns in predicting whether or not their campaign will be funded.
             """
         ),
-        dcc.Link(dbc.Button('Predict my Kickstarter!!!', color='primary'), href='/create')
+        dcc.Link(dbc.Button('Predict my Kickstarter!!!', color='success'), href='/create')
     ],
     md=4,
 )
 
+image_filename = '/Users/nikihodges/PycharmProjects/pythonProject8/venv/assets/kickstarter.png'
+encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+
 column2 = dbc.Col(
-    [
-        html.Img(src='https://www.icloud.com/iclouddrive/0fhkMiAiZ0VGITnqNYNRMQyAw#kickstarter',
-                 className='img-fluid', style={'height': '350px'})
-    ]
-)
+    [html.Div([html.Img
+               (src='data:image/png;base64,{}'.format(encoded_image.decode()
+                                                      ))])])
 
 index = dbc.Row([column1, column2])
 
@@ -140,7 +144,7 @@ success = html.Div([dcc.Location(id='url_login_success', refresh=True),
                     html.Div([html.H2('Login successful.'),
                               html.Br(),
                               html.P('Go to Predictor'),
-                              dcc.Link(dbc.Button('Predict', color='primary'),
+                              dcc.Link(dbc.Button('Predict', color='danger'),
                                        href='/predictions')]),
                     html.Div([html.Br(),
                               html.Button(id='back-button',
@@ -199,8 +203,8 @@ def display_page(pathname):
     [State('username', 'value'),
      State('password', 'value'), State('email', 'value')])
 def insert_users(n_clicks, un, pw, em):
-    hashed_password = generate_password_hash(pw, method='sha256')
     if un is not None and pw is not None and em is not None and n_clicks > 0:
+        hashed_password = generate_password_hash(pw, method='pbkdf2:sha256', salt_length=16)
         ins = Users_tbl.insert().values(username=un, password=hashed_password, email=em, )
         conn = engine.connect()
         conn.execute(ins)
