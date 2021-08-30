@@ -12,6 +12,36 @@ from flask_login import login_user, logout_user, current_user, LoginManager, Use
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Table, create_engine
 from werkzeug.security import generate_password_hash, check_password_hash
+import pandas as pd
+from tensorflow.keras.models import load_model
+import numpy as np
+
+
+def make_predictions(Static_name_text, Static_description_text, Static_goal_text, categories, countries, currencies):
+    model = load_model('model_save')
+    df = pd.DataFrame(
+        {'name': Static_name_text, 'blurb': Static_description_text, 'goal': Static_goal_text, 'category': categories,
+         'country': countries, 'currency': currencies}, index=[0])
+    prediction = model.predict([df['name'], df['blurb'], df['goal'], df[['category', 'country', 'currency']]])
+    prediction = np.where(prediction > 0.5, 1, 0)
+    return prediction
+
+
+categories = pd.read_csv('./data/categories.csv')
+
+categories.columns = ['number','cat']
+
+countries = pd.read_csv('./data/countries.csv')
+
+countries.columns = ['number','countries']
+
+currencies = pd.read_csv('./data/currencies.csv')
+
+currencies.columns = ['number','curren']
+
+categories = categories['cat']
+countries = countries['countries']
+currencies = currencies['curren']
 
 
 external_stylesheets = [
@@ -102,7 +132,7 @@ column1 = dbc.Col(
     md=4,
 )
 
-image_filename = '/Users/nikihodges/PycharmProjects/pythonProject8/venv/assets/kickstarter.png'
+image_filename = './Assets/kickstarter.png'
 encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 column2 = dbc.Col(
@@ -170,36 +200,51 @@ logout = html.Div([dcc.Location(id='logout', refresh=True),
 
 predictions = html.Div(children=[html.Div(html.H4(children="Kickstarter Goal")),
                                  html.Div(className='row', children=[
-                                     html.Div(dcc.Textarea(id='Static_name_text',
-                                                           value='Name:',
+                                     dcc.Textarea(id='Static_name_text',
+                                                           value='',
                                                            className="twelve columns",
                                                            style={'height': 50, 'width': 200, "margin-left": "15px"},
-                                                           disabled=True)),
-                                     html.Div(dcc.Textarea(id='Static_kickstarter_description_text',
-                                                           value='Kickstarter Description:',
-                                                           className="twelve columns",
-                                                           style={'height': 50, 'width': 200, "margin-left": "15px"},
-                                                           disabled=True)),
-                                     html.Div(dcc.Textarea(id='Static_goal_text',
-                                                           value='Enter Kickstarter Goal:',
+                                                           disabled=False),
+                                     html.Div(dcc.Dropdown(id='categories',
+                                                           options=[{'label': i, 'value': i} for i in categories],
+                                                           value=categories[0], placeholder=categories[0],
+                                                           className="three columns",
+                                                           style={'height': 50, 'width': 200, 'color': 'black'},
+                                                        )),
+                                     html.Div(dcc.Slider(
+                                         id='Static_goal_text',
+                                         min=1000,
+                                         max=100000,
+                                         step=1000,
+                                         value=1000
+                                     )),
+                                     html.Div(dcc.Textarea(id='Static_description_text',
+                                                           value='',
                                                            className="twelve columns",
                                                            style={'height': 50, 'width': 175, "margin-left": "15px"},
-                                                           disabled=True)),
-                                     html.Div(dcc.Textarea(id='Static_category_text',
-                                                           value='Enter Kickstarter Category:',
-                                                           className="twelve columns",
-                                                           style={'height': 50, 'width': 175, "margin-left": "15px"},
-                                                           disabled=True)),
-                                     html.Div(dcc.Textarea(id='Static_country_text',
-                                                           value='Country:',
-                                                           className="twelve columns",
-                                                           style={'height': 50, 'width': 200, "margin-left": "15px"},
-                                                           disabled=True)),
-                                     html.Div(dcc.Textarea(id='Static_currency_text',
-                                                           value='Currency:',
-                                                           className="twelve columns",
-                                                           style={'height': 50, 'width': 200, "margin-left": "15px"},
-                                                           disabled=True))])])
+                                                           disabled=False)),
+                                     html.Div(dcc.Dropdown(id='countries',
+                                                           options=[{'label': i, 'value': i} for i in countries],
+                                                           value=countries[0], placeholder=countries[0],
+                                                           className="three columns",
+                                                           style={'height': 50, 'width': 200, 'color': 'black'},
+                                                           )),
+                                     html.Div(dcc.Dropdown(id='currencies',
+                                                           options=[{'label': i, 'value': i} for i in currencies],
+                                                           value=currencies[0], placeholder=currencies[0],
+                                                           className="three columns",
+                                                           style={'height': 50, 'width': 200, 'color': 'black'},
+                                                           )),]),
+                                 html.Div(
+                                     dcc.Textarea(id='prediction-output',
+                                                  value='Output',
+                                                  className="two columns",
+                                                  style={'height': 100, 'width': 300, "margin-left": "15px"},
+                                                  disabled=True)),
+                                 html.Button(children='Predict',
+                                             n_clicks=0,
+                                             id='predict-button')
+                                 ])
 
 
 @login_manager.user_loader
@@ -288,18 +333,18 @@ def update_output(n_clicks, input1, input2):
 
 @app.callback(
     Output('prediction-output', 'value'),
-    [Input('kickstarter_category', 'value'),
-     Input('kickstarter_goal', 'value')
+    [Input('predict-button', 'n_clicks'),
+     Input('Static_name_text','value'),
+     Input('categories', 'value'),
+     Input('Static_goal_text', 'value'),
+     Input('Static_description_text', 'value'),
+     Input('countries', 'value'),
+     Input('currencies', 'value'),
      ]
 )
-def predict_kickstart(kickstarter_category, kickstarter_goal):
-    df_predict = pd.DataFrame(
-        columns=['name', 'description', 'goal', 'category', 'country'],
-        data=[[country_dd]])
-    new = load_listing(dir_value=country_df)
-    new['color'] = 'blue'
-    new['size'] = 8
-    return df_predict
+def predict(n_clicks,Static_name_text, Static_description_text, Static_goal_text, categories, countries, currencies):
+    if n_clicks > 0:
+        return make_predictions(Static_name_text, Static_description_text, Static_goal_text, categories, countries, currencies)
 
 
 if __name__ == "__main__":
