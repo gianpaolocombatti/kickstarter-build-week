@@ -13,6 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Table, create_engine
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 external_stylesheets = [
     dbc.themes.SLATE,  # Bootstrap theme
     'https://www.kaggle.com/sripaadarinivasan/kickstarter-campaigns-dataset',  # kickstarter data
@@ -166,7 +167,39 @@ logout = html.Div([dcc.Location(id='logout', refresh=True),
                    html.Div([login]),
                    html.Button(id='back-button', children='Go back', n_clicks=0)])
 
-predictions = html.Div(children=[html.Div(html.H4(children="Kickstarter Goal:"))])
+
+predictions = html.Div(children=[html.Div(html.H4(children="Kickstarter Goal")),
+                                 html.Div(className='row', children=[
+                                     html.Div(dcc.Textarea(id='Static_name_text',
+                                                           value='Name:',
+                                                           className="twelve columns",
+                                                           style={'height': 50, 'width': 200, "margin-left": "15px"},
+                                                           disabled=True)),
+                                     html.Div(dcc.Textarea(id='Static_kickstarter_description_text',
+                                                           value='Kickstarter Description:',
+                                                           className="twelve columns",
+                                                           style={'height': 50, 'width': 200, "margin-left": "15px"},
+                                                           disabled=True)),
+                                     html.Div(dcc.Textarea(id='Static_goal_text',
+                                                           value='Enter Kickstarter Goal:',
+                                                           className="twelve columns",
+                                                           style={'height': 50, 'width': 175, "margin-left": "15px"},
+                                                           disabled=True)),
+                                     html.Div(dcc.Textarea(id='Static_category_text',
+                                                           value='Enter Kickstarter Category:',
+                                                           className="twelve columns",
+                                                           style={'height': 50, 'width': 175, "margin-left": "15px"},
+                                                           disabled=True)),
+                                     html.Div(dcc.Textarea(id='Static_country_text',
+                                                           value='Country:',
+                                                           className="twelve columns",
+                                                           style={'height': 50, 'width': 200, "margin-left": "15px"},
+                                                           disabled=True)),
+                                     html.Div(dcc.Textarea(id='Static_currency_text',
+                                                           value='Currency:',
+                                                           className="twelve columns",
+                                                           style={'height': 50, 'width': 200, "margin-left": "15px"},
+                                                           disabled=True))])])
 
 
 @login_manager.user_loader
@@ -261,9 +294,9 @@ def update_output(n_clicks, input1, input2):
 )
 def predict_kickstart(kickstarter_category, kickstarter_goal):
     df_predict = pd.DataFrame(
-        columns=['kickstarter_category', 'kickstarter_goal'],
-        data=[[kickstarter_category, kickstarter_goal]])
-    new = kickstarter_category(dir_value=kickstarter_category)
+        columns=['name', 'description', 'goal', 'category', 'country'],
+        data=[[country_dd]])
+    new = load_listing(dir_value=country_df)
     new['color'] = 'blue'
     new['size'] = 8
     return df_predict
